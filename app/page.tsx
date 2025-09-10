@@ -186,6 +186,7 @@ export default function HomeSupabase() {
             persons={persons}
             nominations={nominations}
             onRefresh={refreshData}
+            onAdminPointsClick={handleAdminPointsClick}
           />
         ) : (
           <>
@@ -828,7 +829,7 @@ function VotingSystemSupabase({ nomination, onVoteSubmitted }: { nomination: Nom
 }
 
 // Componente de panel de administración para Supabase
-function AdminPanelSupabase({ persons, nominations, onRefresh }: { persons: Person[], nominations: Nomination[], onRefresh: () => void }) {
+function AdminPanelSupabase({ persons, nominations, onRefresh, onAdminPointsClick }: { persons: Person[], nominations: Nomination[], onRefresh: () => void, onAdminPointsClick: (person: Person) => void }) {
   const [activeTab, setActiveTab] = useState<'persons' | 'nominations'>('persons')
   const [showAddPerson, setShowAddPerson] = useState(false)
   const [newPerson, setNewPerson] = useState({ name: '' })
@@ -968,10 +969,6 @@ function AdminPanelSupabase({ persons, nominations, onRefresh }: { persons: Pers
     }
   }
 
-  const handleAdminPointsClick = (person: Person) => {
-    setSelectedPersonForAdminPoints(person)
-    setShowAdminPointsModal(true)
-  }
 
 
   const handleDeletePerson = async (id: string) => {
@@ -1122,7 +1119,7 @@ Esta acción NO se puede deshacer.
 
                 <div className="space-y-2">
                   <button
-                    onClick={() => handleAdminPointsClick(person)}
+                    onClick={() => onAdminPointsClick(person)}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
                   >
                     Ver Puntos Detallados
