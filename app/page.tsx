@@ -865,6 +865,23 @@ function AdminPanelSupabase({ persons, nominations, onRefresh }: { persons: Pers
     }
   }
 
+  const handleEditName = async (personId: string) => {
+    const person = persons.find(p => p.id === personId)
+    if (!person) return
+
+    const newName = prompt('Nuevo nombre:', person.name)
+    
+    if (!newName || !newName.trim() || newName.trim() === person.name) {
+      return
+    }
+
+    try {
+      await handleUpdatePerson(personId, { name: newName.trim() })
+    } catch (err) {
+      setError('Error al actualizar el nombre')
+    }
+  }
+
   const handleAddPointWithReason = async (personId: string) => {
     const reason = prompt('¿Por qué razón se añade este punto? (Obligatorio)')
     
@@ -1040,18 +1057,26 @@ Esta acción NO se puede deshacer.
                   <p className="text-gray-600 mb-4">{person.description}</p>
                 )}
 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleAddPointWithReason(person.id)}
-                    className="flex-1 btn-success text-sm"
-                  >
-                    +1 Punto
-                  </button>
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEditName(person.id)}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                    >
+                      Editar Nombre
+                    </button>
+                    <button
+                      onClick={() => handleAddPointWithReason(person.id)}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                    >
+                      +1 Punto
+                    </button>
+                  </div>
                   <button
                     onClick={() => handleDeletePerson(person.id)}
-                    className="btn-danger text-sm"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
                   >
-                    Eliminar
+                    Eliminar Persona
                   </button>
                 </div>
               </div>
