@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { supabase, Person, Nomination } from '@/lib/supabase'
-import { X } from 'lucide-react'
+import { X, Edit2 } from 'lucide-react'
 import PersonCard from '@/components/PersonCard'
 import NominationModal from '@/components/NominationModal'
 import AdminLogin from '@/components/AdminLogin'
 import VotingSystem from '@/components/VotingSystem'
 import PointsReasonsModal from '@/components/PointsReasonsModal'
+import AdminPointsModal from '@/components/AdminPointsModal'
 
 export default function HomeSupabase() {
   const [persons, setPersons] = useState<Person[]>([])
@@ -20,6 +21,8 @@ export default function HomeSupabase() {
   const [selectedNomination, setSelectedNomination] = useState<Nomination | null>(null)
   const [showPointsModal, setShowPointsModal] = useState(false)
   const [selectedPersonForPoints, setSelectedPersonForPoints] = useState<Person | null>(null)
+  const [showAdminPointsModal, setShowAdminPointsModal] = useState(false)
+  const [selectedPersonForAdminPoints, setSelectedPersonForAdminPoints] = useState<Person | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -31,6 +34,37 @@ export default function HomeSupabase() {
   const checkAdminStatus = () => {
     const adminStatus = localStorage.getItem('isAdmin')
     setIsAdmin(adminStatus === 'true')
+  }
+
+  const calculateRanking = (persons: Person[]) => {
+    const sorted = [...persons].sort((a, b) => b.points - a.points)
+    const ranking = []
+    let currentRank = 1
+
+    for (let i = 0; i < sorted.length; i++) {
+      // Si no es el primer elemento y los puntos son diferentes, actualizar el ranking
+      if (i > 0 && sorted[i].points !== sorted[i - 1].points) {
+        currentRank = i + 1
+      }
+
+      // Determinar si hay empate
+      const isTie = i > 0 && sorted[i].points === sorted[i - 1].points
+      const hasNextDifferent = i < sorted.length - 1 && sorted[i].points !== sorted[i + 1].points
+      const isFirstInTie = i === 0 || sorted[i].points !== sorted[i - 1].points
+
+      // Si hay empate, usar T + ranking, si no, usar el número normal
+      const rankDisplay = isTie || (isFirstInTie && !hasNextDifferent && i < sorted.length - 1) 
+        ? `T${currentRank}` 
+        : currentRank
+
+      ranking.push({
+        ...sorted[i],
+        rank: rankDisplay,
+        originalIndex: persons.findIndex(p => p.id === sorted[i].id)
+      })
+    }
+
+    return ranking
   }
 
   const fetchPersons = async () => {
@@ -81,6 +115,11 @@ export default function HomeSupabase() {
     setShowPointsModal(true)
   }
 
+  const handleAdminPointsClick = (person: Person) => {
+    setSelectedPersonForAdminPoints(person)
+    setShowAdminPointsModal(true)
+  }
+
   const handleLoginSuccess = () => {
     setIsAdmin(true)
     setShowLogin(false)
@@ -118,7 +157,8 @@ export default function HomeSupabase() {
               {!isAdmin ? (
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm font-medium hover:bg-primary-700 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 text-xs px-2 py-1 rounded transition-colors"
+                  title="Acceso administrativo"
                 >
                   Admin
                 </button>
@@ -162,22 +202,22 @@ export default function HomeSupabase() {
               </p>
             </div>
 
-            <div className="space-y-2">
-              {persons.map((person, index) => {
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {calculateRanking(persons).map((personWithRank) => {
                 const hasPendingNomination = nominations.some(
-                  n => n.person_id === person.id && n.status === 'pending'
+                  n => n.person_id === personWithRank.id && n.status === 'pending'
                 )
                 
                 return (
-                  <div key={person.id} className="flex items-center space-x-3">
+                  <div key={personWithRank.id} className="flex items-center space-x-3">
                     <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-600">#{index + 1}</span>
+                      <span className="text-sm font-bold text-gray-600">{personWithRank.rank}</span>
                     </div>
                     <div className="flex-1">
                       <PersonCard
-                        person={person}
-                        onNominate={() => handleNominate(person)}
-                        onPointsClick={() => handlePointsClick(person)}
+                        person={personWithRank}
+                        onNominate={() => handleNominate(personWithRank)}
+                        onPointsClick={() => handlePointsClick(personWithRank)}
                         canNominate={!hasPendingNomination}
                         pendingNomination={hasPendingNomination}
                       />
@@ -308,6 +348,18 @@ export default function HomeSupabase() {
             setShowPointsModal(false)
             setSelectedPersonForPoints(null)
           }}
+        />
+      )}
+
+      {/* Modal de Admin para Puntos Detallados */}
+      {showAdminPointsModal && selectedPersonForAdminPoints && (
+        <AdminPointsModal
+          person={selectedPersonForAdminPoints}
+          onClose={() => {
+            setShowAdminPointsModal(false)
+            setSelectedPersonForAdminPoints(null)
+          }}
+          onRefresh={fetchPersons}
         />
       )}
     </div>
@@ -920,6 +972,7 @@ function AdminPanelSupabase({ persons, nominations, onRefresh }: { persons: Pers
     }
   }
 
+
   const handleDeletePerson = async (id: string) => {
     const person = persons.find(p => p.id === id)
     if (!person) return
@@ -1047,7 +1100,16 @@ Esta acción NO se puede deshacer.
             {persons.map((person) => (
               <div key={person.id} className="card">
                 <div className="flex justify-between items-start mb-4">
-                  <h4 className="text-lg font-semibold text-gray-900">{person.name}</h4>
+                  <div className="flex items-center space-x-2">
+                    <h4 className="text-lg font-semibold text-gray-900">{person.name}</h4>
+                    <button
+                      onClick={() => handleEditName(person.id)}
+                      className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Editar nombre"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </div>
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>{person.points} pts</span>
                   </div>
@@ -1058,26 +1120,26 @@ Esta acción NO se puede deshacer.
                 )}
 
                 <div className="space-y-2">
+                  <button
+                    onClick={() => handleAdminPointsClick(person)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                  >
+                    Ver Puntos Detallados
+                  </button>
                   <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleEditName(person.id)}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
-                    >
-                      Editar Nombre
-                    </button>
                     <button
                       onClick={() => handleAddPointWithReason(person.id)}
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
                     >
                       +1 Punto
                     </button>
+                    <button
+                      onClick={() => handleDeletePerson(person.id)}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
+                    >
+                      Eliminar
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDeletePerson(person.id)}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors"
-                  >
-                    Eliminar Persona
-                  </button>
                 </div>
               </div>
             ))}
