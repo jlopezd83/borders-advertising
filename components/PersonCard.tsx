@@ -1,6 +1,6 @@
 'use client'
 
-import { Person } from '@/lib/localStorage'
+import { Person } from '@/lib/supabase'
 import { Award, Star, Clock } from 'lucide-react'
 
 interface PersonCardProps {

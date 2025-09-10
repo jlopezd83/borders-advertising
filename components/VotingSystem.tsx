@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Nomination, Vote } from '@/lib/localStorage'
-import { votesApi } from '@/lib/localStorage'
+import { Nomination, Vote } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { ThumbsUp, ThumbsDown, Minus, User, MessageCircle } from 'lucide-react'
 
 interface VotingSystemProps {
@@ -24,8 +24,14 @@ export default function VotingSystem({ nomination, onVoteSubmitted }: VotingSyst
 
   const fetchVotes = async () => {
     try {
-      const data = votesApi.getByNomination(nomination.id)
-      setVotes(data)
+      const { data, error } = await supabase
+        .from('votes')
+        .select('*')
+        .eq('nomination_id', nomination.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setVotes(data || [])
     } catch (err) {
       console.error('Error fetching votes:', err)
     }
@@ -43,14 +49,18 @@ export default function VotingSystem({ nomination, onVoteSubmitted }: VotingSyst
     setError('')
 
     try {
-      votesApi.create({
-        nomination_id: nomination.id,
-        voter_name: voterName.trim(),
-        vote_type: selectedVote
-      })
+      const { error } = await supabase
+        .from('votes')
+        .insert({
+          nomination_id: nomination.id,
+          voter_name: voterName.trim(),
+          vote_type: selectedVote
+        })
+
+      if (error) throw error
 
       setHasVoted(true)
-      fetchVotes()
+      await fetchVotes()
       onVoteSubmitted()
     } catch (err) {
       setError('Error al registrar el voto. Inténtalo de nuevo.')

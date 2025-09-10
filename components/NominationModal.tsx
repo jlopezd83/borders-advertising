@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { X, Send } from 'lucide-react'
-import { Person } from '@/lib/localStorage'
-import { nominationsApi } from '@/lib/localStorage'
+import { Person } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 interface NominationModalProps {
   person: Person
@@ -29,12 +29,16 @@ export default function NominationModal({ person, onClose, onSuccess }: Nominati
     setError('')
 
     try {
-      nominationsApi.create({
-        person_id: person.id,
-        nominator_name: nominatorName.trim(),
-        reason: reason.trim(),
-        status: 'pending'
-      })
+      const { error } = await supabase
+        .from('nominations')
+        .insert({
+          person_id: person.id,
+          nominator_name: nominatorName.trim(),
+          reason: reason.trim(),
+          status: 'pending'
+        })
+
+      if (error) throw error
 
       onSuccess()
     } catch (err) {
