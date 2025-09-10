@@ -110,15 +110,15 @@ export default function HomeSupabase() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Sistema de Nominaciones (Supabase)
+          <div className="flex justify-between items-center h-14">
+            <h1 className="text-xl font-bold text-gray-900 truncate">
+              Listado de borders +O Advertising (septiembre)
             </h1>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2">
               {!isAdmin ? (
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="btn-primary"
+                  className="px-3 py-1.5 bg-primary-600 text-white rounded text-sm font-medium hover:bg-primary-700 transition-colors"
                 >
                   Admin
                 </button>
@@ -126,15 +126,15 @@ export default function HomeSupabase() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setShowLogin(true)}
-                    className="btn-secondary"
+                    className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm font-medium hover:bg-gray-300 transition-colors"
                   >
-                    Panel Admin
+                    Panel
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="btn-danger"
+                    className="px-3 py-1.5 bg-red-600 text-white rounded text-sm font-medium hover:bg-red-700 transition-colors"
                   >
-                    Cerrar Sesión
+                    Salir
                   </button>
                 </div>
               )}
@@ -153,30 +153,36 @@ export default function HomeSupabase() {
           />
         ) : (
           <>
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Lista de Personas
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Ranking por Puntos
               </h2>
-              <p className="text-gray-600">
-                Selecciona una persona para nominarla y explicar por qué merece el reconocimiento.
+              <p className="text-gray-600 text-sm">
+                Haz clic en los puntos para ver las razones. Selecciona una persona para nominarla.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {persons.map((person) => {
+            <div className="space-y-2">
+              {persons.map((person, index) => {
                 const hasPendingNomination = nominations.some(
                   n => n.person_id === person.id && n.status === 'pending'
                 )
                 
                 return (
-                  <PersonCard
-                    key={person.id}
-                    person={person}
-                    onNominate={() => handleNominate(person)}
-                    onPointsClick={() => handlePointsClick(person)}
-                    canNominate={!hasPendingNomination}
-                    pendingNomination={hasPendingNomination}
-                  />
+                  <div key={person.id} className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-bold text-gray-600">#{index + 1}</span>
+                    </div>
+                    <div className="flex-1">
+                      <PersonCard
+                        person={person}
+                        onNominate={() => handleNominate(person)}
+                        onPointsClick={() => handlePointsClick(person)}
+                        canNominate={!hasPendingNomination}
+                        pendingNomination={hasPendingNomination}
+                      />
+                    </div>
+                  </div>
                 )
               })}
             </div>
