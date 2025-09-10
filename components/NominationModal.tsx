@@ -7,15 +7,19 @@ import { supabase } from '@/lib/supabase'
 
 interface NominationModalProps {
   person: Person
+  persons: Person[]
   onClose: () => void
   onSuccess: () => void
 }
 
-export default function NominationModal({ person, onClose, onSuccess }: NominationModalProps) {
+export default function NominationModal({ person, persons, onClose, onSuccess }: NominationModalProps) {
   const [nominatorName, setNominatorName] = useState('')
   const [reason, setReason] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Ordenar personas alfabéticamente
+  const sortedPersons = [...persons].sort((a, b) => a.name.localeCompare(b.name, 'es'))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,16 +86,21 @@ export default function NominationModal({ person, onClose, onSuccess }: Nominati
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tu nombre *
+                Selecciona tu nombre *
               </label>
-              <input
-                type="text"
+              <select
                 value={nominatorName}
                 onChange={(e) => setNominatorName(e.target.value)}
                 className="input-field"
-                placeholder="Ingresa tu nombre completo"
                 required
-              />
+              >
+                <option value="">-- Selecciona tu nombre --</option>
+                {sortedPersons.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
