@@ -205,28 +205,68 @@ export default function HomeSupabase() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-              {calculateRanking(persons).map((personWithRank) => {
-                const hasPendingNomination = nominations.some(
-                  n => n.person_id === personWithRank.id && n.status === 'pending'
-                )
+              {(() => {
+                const ranking = calculateRanking(persons)
+                const midPoint = Math.ceil(ranking.length / 2)
+                const leftColumn = ranking.slice(0, midPoint)
+                const rightColumn = ranking.slice(midPoint)
                 
                 return (
-                  <div key={personWithRank.id} className="flex items-center space-x-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-bold text-gray-600">{personWithRank.rank}</span>
+                  <>
+                    {/* Columna Izquierda */}
+                    <div className="space-y-2">
+                      {leftColumn.map((personWithRank) => {
+                        const hasPendingNomination = nominations.some(
+                          n => n.person_id === personWithRank.id && n.status === 'pending'
+                        )
+                        
+                        return (
+                          <div key={personWithRank.id} className="flex items-center space-x-3">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-gray-600">{personWithRank.rank}</span>
+                            </div>
+                            <div className="flex-1">
+                              <PersonCard
+                                person={personWithRank}
+                                onNominate={() => handleNominate(personWithRank)}
+                                onPointsClick={() => handlePointsClick(personWithRank)}
+                                canNominate={!hasPendingNomination}
+                                pendingNomination={hasPendingNomination}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                    <div className="flex-1">
-                      <PersonCard
-                        person={personWithRank}
-                        onNominate={() => handleNominate(personWithRank)}
-                        onPointsClick={() => handlePointsClick(personWithRank)}
-                        canNominate={!hasPendingNomination}
-                        pendingNomination={hasPendingNomination}
-                      />
+                    
+                    {/* Columna Derecha */}
+                    <div className="space-y-2">
+                      {rightColumn.map((personWithRank) => {
+                        const hasPendingNomination = nominations.some(
+                          n => n.person_id === personWithRank.id && n.status === 'pending'
+                        )
+                        
+                        return (
+                          <div key={personWithRank.id} className="flex items-center space-x-3">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-bold text-gray-600">{personWithRank.rank}</span>
+                            </div>
+                            <div className="flex-1">
+                              <PersonCard
+                                person={personWithRank}
+                                onNominate={() => handleNominate(personWithRank)}
+                                onPointsClick={() => handlePointsClick(personWithRank)}
+                                canNominate={!hasPendingNomination}
+                                pendingNomination={hasPendingNomination}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
-                  </div>
+                  </>
                 )
-              })}
+              })()}
             </div>
 
             {/* Nominaciones Pendientes para Votar */}
