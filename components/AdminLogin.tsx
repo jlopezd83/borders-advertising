@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { X, User, Lock } from 'lucide-react'
-import { adminsApi } from '@/lib/localStorage'
+import { supabase } from '@/lib/supabase'
 
 interface AdminLoginProps {
   onClose: () => void
@@ -21,8 +21,18 @@ export default function AdminLogin({ onClose, onSuccess }: AdminLoginProps) {
     setError('')
 
     try {
-      const admin = adminsApi.authenticate(username, password)
-      if (admin) {
+      const { data, error } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('username', username)
+        .single()
+
+      if (error || !data) {
+        setError('Credenciales incorrectas')
+        return
+      }
+
+      if (data.password === password) {
         onSuccess()
       } else {
         setError('Credenciales incorrectas')
