@@ -6,7 +6,6 @@ import { X } from 'lucide-react'
 import PersonCard from '@/components/PersonCard'
 import NominationModal from '@/components/NominationModal'
 import AdminLogin from '@/components/AdminLogin'
-import AdminPanel from '@/components/AdminPanel'
 import VotingSystem from '@/components/VotingSystem'
 import PointsReasonsModal from '@/components/PointsReasonsModal'
 
