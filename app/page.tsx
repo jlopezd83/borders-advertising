@@ -115,10 +115,6 @@ export default function HomeSupabase() {
     setShowPointsModal(true)
   }
 
-  const handleAdminPointsClick = (person: Person) => {
-    setSelectedPersonForAdminPoints(person)
-    setShowAdminPointsModal(true)
-  }
 
   const handleLoginSuccess = () => {
     setIsAdmin(true)
@@ -970,6 +966,11 @@ function AdminPanelSupabase({ persons, nominations, onRefresh }: { persons: Pers
     } catch (err) {
       setError('Error al añadir el punto')
     }
+  }
+
+  const handleAdminPointsClick = (person: Person) => {
+    setSelectedPersonForAdminPoints(person)
+    setShowAdminPointsModal(true)
   }
 
 
