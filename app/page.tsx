@@ -115,6 +115,11 @@ export default function HomeSupabase() {
     setShowPointsModal(true)
   }
 
+  const handleAdminPointsClick = (person: Person) => {
+    setSelectedPersonForAdminPoints(person)
+    setShowAdminPointsModal(true)
+  }
+
 
   const handleLoginSuccess = () => {
     setIsAdmin(true)
