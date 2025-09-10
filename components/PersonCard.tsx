@@ -6,6 +6,7 @@ import { Award, Star, Clock } from 'lucide-react'
 interface PersonCardProps {
   person: Person
   onNominate: () => void
+  onPointsClick: () => void
   canNominate: boolean
   pendingNomination: boolean
 }
@@ -13,6 +14,7 @@ interface PersonCardProps {
 export default function PersonCard({ 
   person, 
   onNominate, 
+  onPointsClick,
   canNominate, 
   pendingNomination 
 }: PersonCardProps) {
@@ -27,15 +29,17 @@ export default function PersonCard({
             <h3 className="text-xl font-semibold text-gray-900">{person.name}</h3>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Star className="text-yellow-500" size={16} />
-              <span>{person.points} puntos</span>
+              <button
+                onClick={onPointsClick}
+                className="text-primary-600 hover:text-primary-700 font-semibold underline cursor-pointer transition-colors"
+              >
+                {person.points} puntos
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {person.description && (
-        <p className="text-gray-600 mb-4 line-clamp-3">{person.description}</p>
-      )}
 
       <div className="flex items-center justify-between">
         {pendingNomination ? (
