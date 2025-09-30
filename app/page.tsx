@@ -913,7 +913,8 @@ Esta acción NO se puede deshacer.
       onRefresh()
     } catch (err) {
       console.error('Error completo al eliminar:', err)
-      setError(`Error al eliminar la persona: ${err.message || err}`)
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      setError(`Error al eliminar la persona: ${errorMessage}`)
     }
   }
 
@@ -970,7 +971,8 @@ Esta acción NO se puede deshacer.
       onRefresh()
     } catch (err) {
       console.error('Error completo:', err)
-      setError(`Error al actualizar la nominación: ${err.message || err}`)
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      setError(`Error al actualizar la nominación: ${errorMessage}`)
     }
   }
 
