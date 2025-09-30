@@ -29,7 +29,30 @@ export default function HomeSupabase() {
     checkAdminStatus()
     fetchPersons()
     fetchNominations()
+    testSupabaseConnection()
   }, [])
+
+  const testSupabaseConnection = async () => {
+    try {
+      console.log('🔍 Probando conexión con Supabase...')
+      console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+      console.log('Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Configurada' : 'No configurada')
+      
+      // Probar una consulta simple
+      const { data, error } = await supabase
+        .from('persons')
+        .select('count')
+        .limit(1)
+      
+      if (error) {
+        console.error('❌ Error de conexión:', error)
+      } else {
+        console.log('✅ Conexión exitosa con Supabase')
+      }
+    } catch (err) {
+      console.error('❌ Error crítico de conexión:', err)
+    }
+  }
 
   const checkAdminStatus = () => {
     const adminStatus = localStorage.getItem('isAdmin')
@@ -1005,6 +1028,12 @@ Esta acción NO se puede deshacer.
             }`}
           >
             Nominaciones ({nominations.length})
+          </button>
+          <button
+            onClick={testSupabaseConnection}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            🔍 Diagnóstico
           </button>
         </div>
       </div>
