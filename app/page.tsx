@@ -215,6 +215,7 @@ export default function HomeSupabase() {
             nominations={nominations}
             onRefresh={refreshData}
             onAdminPointsClick={handleAdminPointsClick}
+            onDiagnosticClick={testSupabaseConnection}
           />
         ) : (
           <>
@@ -754,7 +755,7 @@ function VotingSystemSupabase({ nomination, onVoteSubmitted }: { nomination: Nom
 }
 
 // Componente de panel de administración para Supabase
-function AdminPanelSupabase({ persons, nominations, onRefresh, onAdminPointsClick }: { persons: Person[], nominations: Nomination[], onRefresh: () => void, onAdminPointsClick: (person: Person) => void }) {
+function AdminPanelSupabase({ persons, nominations, onRefresh, onAdminPointsClick, onDiagnosticClick }: { persons: Person[], nominations: Nomination[], onRefresh: () => void, onAdminPointsClick: (person: Person) => void, onDiagnosticClick: () => void }) {
   const [activeTab, setActiveTab] = useState<'persons' | 'nominations'>('persons')
   const [showAddPerson, setShowAddPerson] = useState(false)
   const [newPerson, setNewPerson] = useState({ name: '' })
@@ -1030,7 +1031,7 @@ Esta acción NO se puede deshacer.
             Nominaciones ({nominations.length})
           </button>
           <button
-            onClick={testSupabaseConnection}
+            onClick={onDiagnosticClick}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
           >
             🔍 Diagnóstico
