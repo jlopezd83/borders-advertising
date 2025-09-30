@@ -875,7 +875,10 @@ function AdminPanelSupabase({ persons, nominations, onRefresh, onAdminPointsClic
 
   const handleDeletePerson = async (id: string) => {
     const person = persons.find(p => p.id === id)
-    if (!person) return
+    if (!person) {
+      console.error('Persona no encontrada:', id)
+      return
+    }
 
     const confirmMessage = `⚠️ ADVERTENCIA ⚠️
 
@@ -894,39 +897,59 @@ Esta acción NO se puede deshacer.
     if (!confirm(confirmMessage)) return
 
     try {
+      console.log('Eliminando persona:', person.name, 'ID:', id)
+      
       const { error } = await supabase
         .from('persons')
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error eliminando persona:', error)
+        throw error
+      }
+
+      console.log('Persona eliminada exitosamente')
       onRefresh()
     } catch (err) {
-      setError('Error al eliminar la persona')
+      console.error('Error completo al eliminar:', err)
+      setError(`Error al eliminar la persona: ${err.message || err}`)
     }
   }
 
   const handleNominationStatus = async (id: string, status: 'approved' | 'rejected') => {
     try {
+      console.log('Actualizando nominación:', id, 'status:', status)
+      
       const { error } = await supabase
         .from('nominations')
         .update({ status })
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Error actualizando nominación:', error)
+        throw error
+      }
 
       // Si se aprueba, incrementar puntos de la persona
       if (status === 'approved') {
         const nomination = nominations.find(n => n.id === id)
         if (nomination) {
+          console.log('Nominación encontrada:', nomination)
+          
           // Actualizar puntos de la persona
-          await supabase
+          const { error: updateError } = await supabase
             .from('persons')
             .update({ points: nomination.person!.points + 1 })
             .eq('id', nomination.person_id)
 
+          if (updateError) {
+            console.error('Error actualizando puntos:', updateError)
+            throw updateError
+          }
+
           // Registrar la razón del punto
-          await supabase
+          const { error: reasonError } = await supabase
             .from('point_reasons')
             .insert({
               person_id: nomination.person_id,
@@ -935,12 +958,19 @@ Esta acción NO se puede deshacer.
               added_by: 'nomination',
               nomination_id: nomination.id
             })
+
+          if (reasonError) {
+            console.error('Error insertando razón:', reasonError)
+            throw reasonError
+          }
         }
       }
 
+      console.log('Nominación actualizada exitosamente')
       onRefresh()
     } catch (err) {
-      setError('Error al actualizar la nominación')
+      console.error('Error completo:', err)
+      setError(`Error al actualizar la nominación: ${err.message || err}`)
     }
   }
 
