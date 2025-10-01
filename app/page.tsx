@@ -175,7 +175,7 @@ export default function HomeSupabase() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <h1 className="text-xl font-bold text-gray-900 truncate">
-              Listado de borders +O Advertising (septiembre)
+              Listado de borders +O Advertising (octubre)
             </h1>
             <div className="flex space-x-2">
               {!isAdmin ? (
