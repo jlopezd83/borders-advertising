@@ -47,11 +47,22 @@ export default function HomeSupabase() {
 
   useEffect(() => {
     checkAdminStatus()
-    fetchPersons()
-    fetchNominations()
-    fetchCurrentMonthPoints()
     testSupabaseConnection()
+    loadAllData()
   }, [])
+
+  const loadAllData = async () => {
+    setLoading(true)
+    try {
+      await Promise.all([
+        fetchPersons(),
+        fetchNominations(),
+        fetchCurrentMonthPoints(),
+      ])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const testSupabaseConnection = async () => {
     try {
@@ -96,6 +107,7 @@ export default function HomeSupabase() {
       setCurrentMonthPoints(data || [])
     } catch (error) {
       console.error('Error fetching monthly points:', error)
+      setCurrentMonthPoints([])
     }
   }
 
@@ -106,28 +118,32 @@ export default function HomeSupabase() {
   }
 
   const calculateRanking = (persons: Person[]) => {
-    const sorted = [...persons].sort(
-      (a, b) => getMonthlyPointsForPerson(b.id) - getMonthlyPointsForPerson(a.id)
-    )
+    const sorted = [...persons].sort((a, b) => {
+      const pointsA = getMonthlyPointsForPerson(a.id)
+      const pointsB = getMonthlyPointsForPerson(b.id)
+      if (pointsB !== pointsA) return pointsB - pointsA
+      return a.name.localeCompare(b.name)
+    })
     const ranking = []
     let currentRank = 1
 
     for (let i = 0; i < sorted.length; i++) {
-      // Si no es el primer elemento y los puntos son diferentes, actualizar el ranking
-      if (i > 0 && sorted[i].points !== sorted[i - 1].points) {
+      const monthlyPoints = getMonthlyPointsForPerson(sorted[i].id)
+      const prevMonthly = i > 0 ? getMonthlyPointsForPerson(sorted[i - 1].id) : null
+      const nextMonthly = i < sorted.length - 1 ? getMonthlyPointsForPerson(sorted[i + 1].id) : null
+
+      if (i > 0 && monthlyPoints !== prevMonthly) {
         currentRank = i + 1
       }
 
-      // Determinar si hay empate
-      const isTie = i > 0 && sorted[i].points === sorted[i - 1].points
-      const hasNextDifferent = i < sorted.length - 1 && sorted[i].points !== sorted[i + 1].points
-      const isFirstInTie = i === 0 || sorted[i].points !== sorted[i - 1].points
+      const isTie = i > 0 && monthlyPoints === prevMonthly
+      const hasNextDifferent = i < sorted.length - 1 && monthlyPoints !== nextMonthly
+      const isFirstInTie = i === 0 || monthlyPoints !== prevMonthly
 
-      // Si hay empate, usar T + ranking, si no, usar el número normal
-      const rankDisplay = isTie || (isFirstInTie && !hasNextDifferent && i < sorted.length - 1) 
-        ? `T${currentRank}` 
+      const rankDisplay = isTie || (isFirstInTie && !hasNextDifferent && i < sorted.length - 1)
+        ? `T${currentRank}`
         : currentRank
-      const monthlyPoints = getMonthlyPointsForPerson(sorted[i].id)
+
       ranking.push({
         ...sorted[i],
         points: monthlyPoints,
@@ -144,14 +160,11 @@ export default function HomeSupabase() {
       const { data, error } = await supabase
         .from('persons')
         .select('*')
-        .order('points', { ascending: false })
       
       if (error) throw error
       setPersons(data || [])
     } catch (error) {
       console.error('Error fetching persons:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -205,8 +218,7 @@ export default function HomeSupabase() {
   }
 
   const refreshData = () => {
-    fetchPersons()
-    fetchNominations()
+    loadAllData()
   }
 
   if (loading) {
