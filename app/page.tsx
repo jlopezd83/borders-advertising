@@ -23,12 +23,33 @@ export default function HomeSupabase() {
   const [selectedPersonForPoints, setSelectedPersonForPoints] = useState<Person | null>(null)
   const [showAdminPointsModal, setShowAdminPointsModal] = useState(false)
   const [selectedPersonForAdminPoints, setSelectedPersonForAdminPoints] = useState<Person | null>(null)
+  const [currentMonthPoints, setCurrentMonthPoints] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  const now = new Date()
+  const currentMonthIndex = now.getMonth()
+  const currentYear = now.getFullYear()
+  const monthNames = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ]
+  const currentMonthLabel = `${monthNames[currentMonthIndex]} ${currentYear}`
 
   useEffect(() => {
     checkAdminStatus()
     fetchPersons()
     fetchNominations()
+    fetchCurrentMonthPoints()
     testSupabaseConnection()
   }, [])
 
@@ -59,8 +80,35 @@ export default function HomeSupabase() {
     setIsAdmin(adminStatus === 'true')
   }
 
+  const fetchCurrentMonthPoints = async () => {
+    try {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), now.getMonth(), 1)
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+
+      const { data, error } = await supabase
+        .from('point_reasons')
+        .select('*')
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString())
+
+      if (error) throw error
+      setCurrentMonthPoints(data || [])
+    } catch (error) {
+      console.error('Error fetching monthly points:', error)
+    }
+  }
+
+  const getMonthlyPointsForPerson = (personId: string) => {
+    return currentMonthPoints
+      .filter((pr: any) => pr.person_id === personId)
+      .reduce((sum: number, pr: any) => sum + (pr.points_added || 0), 0)
+  }
+
   const calculateRanking = (persons: Person[]) => {
-    const sorted = [...persons].sort((a, b) => b.points - a.points)
+    const sorted = [...persons].sort(
+      (a, b) => getMonthlyPointsForPerson(b.id) - getMonthlyPointsForPerson(a.id)
+    )
     const ranking = []
     let currentRank = 1
 
@@ -79,9 +127,10 @@ export default function HomeSupabase() {
       const rankDisplay = isTie || (isFirstInTie && !hasNextDifferent && i < sorted.length - 1) 
         ? `T${currentRank}` 
         : currentRank
-
+      const monthlyPoints = getMonthlyPointsForPerson(sorted[i].id)
       ranking.push({
         ...sorted[i],
+        points: monthlyPoints,
         rank: rankDisplay,
         originalIndex: persons.findIndex(p => p.id === sorted[i].id)
       })
@@ -175,7 +224,7 @@ export default function HomeSupabase() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14">
             <h1 className="text-xl font-bold text-gray-900 truncate">
-              Listado de borders +O Advertising (febrero)
+              Listado de borders +O Advertising ({currentMonthLabel})
             </h1>
             <div className="flex space-x-2">
               {!isAdmin ? (

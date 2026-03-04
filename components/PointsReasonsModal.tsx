@@ -35,6 +35,10 @@ export default function PointsReasonsModal({ person, onClose }: PointsReasonsMod
 
   const fetchReasons = async () => {
     try {
+      const now = new Date()
+      const start = new Date(now.getFullYear(), now.getMonth(), 1)
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+
       const { data, error } = await supabase
         .from('point_reasons')
         .select(`
@@ -42,6 +46,8 @@ export default function PointsReasonsModal({ person, onClose }: PointsReasonsMod
           nomination:nominations(nominator_name)
         `)
         .eq('person_id', person.id)
+        .gte('created_at', start.toISOString())
+        .lt('created_at', end.toISOString())
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -114,7 +120,9 @@ export default function PointsReasonsModal({ person, onClose }: PointsReasonsMod
               <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-primary-900">Total de Puntos</h3>
-                  <span className="text-2xl font-bold text-primary-600">{person.points}</span>
+                  <span className="text-2xl font-bold text-primary-600">
+                    {reasons.reduce((sum, r) => sum + r.points_added, 0)}
+                  </span>
                 </div>
               </div>
 
